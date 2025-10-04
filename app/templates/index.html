@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>连词成句</title>
+    <link rel="stylesheet" href="/static/css/style.css" />
+  </head>
+  <body>
+    <div class="app app-single">
+      <main class="main">
+        <section id="guide" class="guide" aria-labelledby="guideTitle">
+          <div class="guide-content">
+            <!-- 顶部公告条：仅一行滚动提示 -->
+            <div class="announcement-bar guide-announcement">
+              <div class="marquee"><span id="marqueeNotice">公益项目 请勿攻击本站！欢迎加入交流群一起维护此项目</span></div>
+            </div>
+            <h1 id="guideTitle" class="text-center">欢迎使用连词成句</h1>
+            <p><strong>项目灵感</strong><br>
+            该项目灵感源于大语言模型(LLM)的特殊能力：将不相关词汇自然融合到连贯故事中。LLM能"天马行空"地创造情境，将美国当代英语语料库（COCA）使用频率最高的前20,000个单词整合成生动有趣的句子，符合人类大脑的记忆规律——故事化、情境化的内容更容易被记住。项目中的每个情境句都是这种能力的体现，让学习者在阅读故事的同时，记住大量词汇。</p>
+            
+            <p>2个月内词汇量达到英语母语水平。无需再单独记忆<strong>四六级、考研、雅思托福、SAT、GMAT、TOEFL、GRE单词</strong>，读通200条情境句，彻底解决词汇量问题。</p>
+            
+            <p><strong>功能介绍：</strong></p>
+            <ul>
+              <li><strong>词库：</strong>COCA词库收录至6万词！仍在持续更新中，熟读句子后复习用，学有余力就继续挑战吧！</li>
+              <li><strong>语境：</strong>主界面，已更新到122句，点击词可跳转释义查看，支持下载。</li>
+              <li><strong>释义：</strong>快速查看词的释义。如果没有释义就是词库有缺失，可以用智能体查询或者反馈问题~谢谢</li>
+              <li><strong>智能体：</strong>已接入大模型，可做翻译（默认）或自定义任务。</li>
+            </ul>
+            
+            <p>有想法或建议？欢迎加入项目维护：</p>
+            <p>- 微信交流群（10.9前）</p>
+            <p class="qr-wrap"><img src="/static/群.png" alt="微信交流群二维码" class="qr-image" /></p>
+            <p>- 联系作者微信：<strong>yes_smile_peace</strong></p>
+            
+            <button id="guideClose" class="guide-close" type="button">了解了，开始体验</button>
+          </div>
+        </section>
+
+        <!-- 语境视图（整合：含选择器与阅读区） -->
+        <div id="view-segments" class="view" aria-label="语境视图">
+          <!-- 选择器区域：原“数据库”内容搬到这里 -->
+          <div id="segments-selector">
+            <div class="section">
+              <div class="section-title">选择情境句载入</div>
+              <div id="txtList" class="list"></div>
+            </div>
+            <div class="section">
+              <div class="section-title">数据库状态</div>
+              <div id="excelFiles" class="list"></div>
+            </div>
+          </div>
+
+          <!-- 阅读区域：原"语境"阅读区 -->
+          <section id="segments-reader" class="center" hidden>
+            <div class="center-header"><span>语境</span><div class="actions-row"><button id="sendToAIBtn" class="btn-copy" type="button">发给AI</button><button id="copyAllBtn" class="btn-copy">下载</button><button id="backToSelectorBtn" class="btn-copy" type="button">返回</button></div></div>
+            <div id="content" class="center-body"></div>
+          </section>
+        </div>
+
+        <!-- 词库视图（选择器 + 阅读区） -->
+        <div id="view-wordbook" class="view" aria-label="词库视图">
+          <!-- 选择器：批次列表 -->
+          <div id="wordbook-selector">
+            <div class="section">
+              <div class="section-title">选择词库批次</div>
+              <div id="wbBatchList" class="list"></div>
+            </div>
+          </div>
+
+          <!-- 阅读区：左侧单词列表 + 右侧释义区 -->
+          <section id="wordbook-reader" class="center" hidden>
+              <div class="center-header">
+              <span>词库</span>
+              <div class="actions-row actions-row-lg">
+                <label class="inline-field">
+                  <span>释义</span>
+                  <label class="switch">
+                    <input id="wbExplainSwitch" type="checkbox" />
+                    <span class="switch-slider"></span>
+                  </label>
+                </label>
+                <button id="wbBackBtn" class="btn-copy" type="button">返回</button>
+              </div>
+            </div>
+              <div class="center-body">
+              <div id="wbDetail" class="list scroll-area-70vh"></div>
+            </div>
+          </section>
+        </div>
+
+        <!-- 释义视图 -->
+        <div id="view-lookup" class="view" aria-label="释义视图">
+          <div class="lookup">
+            <div class="chat-header">释义</div>
+            <div id="lookupBody" class="lookup-body"></div>
+          </div>
+        </div>
+
+        <!-- 智能体视图 -->
+        <div id="view-ai" class="view" aria-label="智能体视图">
+          <div class="ai">
+            <div class="chat-header">
+              <div class="chat-title">智能体</div>
+              <div class="ai-toolbar" role="group" aria-label="对话设置">
+                <label class="sr-only" for="aiModel">对话模型</label>
+                <select id="aiModel" title="对话模型"></select>
+                <label class="sr-only" for="aiSystem">系统提示词</label>
+                <input id="aiSystem" type="text" placeholder="系统提示词（可选）" />
+                <div class="ai-key-field">
+                  <label class="sr-only" for="aiKey">API Key</label>
+                  <input id="aiKey" type="password" placeholder="硅基流动 API Key" autocomplete="off" />
+                  <button type="button" id="aiKeyToggle" class="btn-icon" aria-label="切换 API Key 可见性">显示</button>
+                </div>
+              </div>
+            </div>
+            <div id="aiList" class="ai-list" role="log" aria-live="polite" aria-relevant="additions"></div>
+            <form id="aiComposerForm" class="ai-composer" novalidate>
+              <label class="sr-only" for="aiInput">发送内容</label>
+              <textarea id="aiInput" rows="1" placeholder="请输入内容" required></textarea>
+              <button type="submit" id="aiSend" class="btn-primary">发送</button>
+            </form>
+          </div>
+        </div>
+
+        <!-- 今日短句视图：仅展示一张图片，纯净无其他控件 -->
+        <div id="view-todayphrase" class="view" aria-label="今日短句视图">
+          <div class="today-body">
+            <img id="todayphraseImg" alt="今日短句" />
+          </div>
+        </div>
+      </main>
+
+      <nav class="bottom-nav" role="tablist" aria-label="主导航">
+        <button class="tab" data-view="wordbook" role="tab" aria-selected="false">词库</button>
+        <button class="tab" data-view="segments" role="tab" aria-selected="false">语境</button>
+        <button class="tab" data-view="lookup" role="tab" aria-selected="false">释义</button>
+        <button class="tab" data-view="ai" role="tab" aria-selected="false">智能体</button>
+        <button class="tab" data-view="todayphrase" role="tab" aria-selected="false">今日短句</button>
+      </nav>
+    </div>
+
+    <script type="module" src="/static/js/main.js"></script>
+    <script src="/static/js/jquery.min.js"></script>
+  </body>
+</html>

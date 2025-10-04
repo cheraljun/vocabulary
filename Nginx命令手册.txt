@@ -1,0 +1,359 @@
+===============================================
+             Nginx 命令手册
+===============================================
+
+Nginx 目录
+-----------------------------------------------
+C:\Users\Administrator\Desktop\nginx-1.28.0
+
+
+===============================================
+         基础命令（在 Nginx 目录下执行）
+===============================================
+
+1. 启动 Nginx
+-----------------------------------------------
+cd C:\Users\Administrator\Desktop\nginx-1.28.0
+start nginx
+
+
+2. 停止 Nginx
+-----------------------------------------------
+cd C:\Users\Administrator\Desktop\nginx-1.28.0
+nginx -s stop
+
+
+3. 重启 Nginx（修改配置后）
+-----------------------------------------------
+cd C:\Users\Administrator\Desktop\nginx-1.28.0
+nginx -s reload
+
+
+4. 测试配置文件是否正确
+-----------------------------------------------
+cd C:\Users\Administrator\Desktop\nginx-1.28.0
+nginx -t
+
+
+5. 检查 Nginx 是否运行
+-----------------------------------------------
+tasklist /fi "imagename eq nginx.exe"
+
+
+6. 强制结束所有 Nginx 进程
+-----------------------------------------------
+taskkill /f /im nginx.exe
+
+
+===============================================
+            配置文件位置
+===============================================
+
+配置文件：
+C:\Users\Administrator\Desktop\nginx-1.28.0\conf\nginx.conf
+
+修改后必须重启：
+nginx -s reload
+
+
+===============================================
+            端口转发配置
+===============================================
+
+完整配置文件（复制整个内容到 nginx.conf）
+-----------------------------------------------
+
+配置文件位置： C:\Users\Administrator\Desktop\nginx-1.28.0\conf\nginx.conf
+
+--- 从这里开始复制 ---
+
+# 工作进程数（自动检测CPU核心数）
+worker_processes  auto;
+
+# 错误日志位置
+error_log  logs/error.log;
+
+# 事件配置（必须有！）
+events {
+    worker_connections  1024;
+}
+
+# HTTP 配置
+http {
+    include       mime.types;
+    default_type  application/octet-stream;
+
+    # 访问日志
+    access_log  logs/access.log;
+
+    # 性能优化
+    sendfile        on;
+    keepalive_timeout  65;
+
+    # 您的 FastAPI 应用
+    server {
+        listen       80;           # 监听 80 端口
+        server_name  localhost;    # 服务器名称（可以改成您的域名）
+
+        # 所有请求转发到 FastAPI
+        location / {
+            # 转发到 FastAPI（127.0.0.1:5000）
+            proxy_pass http://127.0.0.1:5000;
+
+            # ====== 关键配置：传递真实 IP ======
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header Host $host;
+            proxy_set_header X-Forwarded-Proto $scheme;
+
+            # ====== AI 流式响应支持 ======
+            proxy_buffering off;           # 禁用缓冲（流式响应需要）
+            proxy_cache off;               # 禁用缓存
+            proxy_read_timeout 120s;       # 超时时间 120 秒
+            
+            # HTTP/1.1 支持
+            proxy_http_version 1.1;
+            proxy_set_header Connection "";
+        }
+    }
+}
+
+--- 复制到这里结束 ---
+
+
+如何修改端口？
+-----------------------------------------------
+
+改监听端口（80 → 8080）：
+listen       8080;  # 改这里
+
+改转发端口（5000 → 3000）：
+proxy_pass http://127.0.0.1:3000;  # 改这里
+
+修改后执行：
+nginx -t          # 测试配置
+nginx -s reload   # 重启生效
+
+
+===============================================
+           常用操作流程
+===============================================
+
+修改配置后重启
+-----------------------------------------------
+# 1. 进入目录
+cd C:\Users\Administrator\Desktop\nginx-1.28.0
+
+# 2. 测试配置
+nginx -t
+
+# 3. 重启生效
+nginx -s reload
+
+
+完全重启 Nginx
+-----------------------------------------------
+# 1. 停止
+nginx -s stop
+
+# 2. 启动
+start nginx
+
+# 3. 检查
+tasklist /fi "imagename eq nginx.exe"
+
+
+清空所有进程重新启动
+-----------------------------------------------
+# 1. 强制结束所有
+taskkill /f /im nginx.exe
+
+# 2. 启动
+cd C:\Users\Administrator\Desktop\nginx-1.28.0
+start nginx
+
+
+===============================================
+            查看日志
+===============================================
+
+访问日志
+C:\Users\Administrator\Desktop\nginx-1.28.0\logs\access.log
+
+错误日志
+C:\Users\Administrator\Desktop\nginx-1.28.0\logs\error.log
+
+查看最新日志（PowerShell）
+-----------------------------------------------
+# 访问日志最后20行
+Get-Content C:\Users\Administrator\Desktop\nginx-1.28.0\logs\access.log -Tail 20
+
+# 错误日志最后20行
+Get-Content C:\Users\Administrator\Desktop\nginx-1.28.0\logs\error.log -Tail 20
+
+
+===============================================
+            常见问题
+===============================================
+
+问题1：启动失败，提示端口被占用
+-----------------------------------------------
+原因： 80端口被其他程序占用（如IIS）
+
+解决：
+# 查看80端口被谁占用
+netstat -ano | findstr :80
+
+# 结束占用进程（PID是上面查到的进程号）
+taskkill /f /pid 进程号
+
+
+问题2：修改配置不生效
+-----------------------------------------------
+解决：
+# 1. 测试配置是否正确
+nginx -t
+
+# 2. 如果提示错误，检查配置文件
+# 3. 如果提示OK，重启
+nginx -s reload
+
+
+问题3：访问网站显示502错误
+-----------------------------------------------
+原因： FastAPI 没有运行在5000端口
+
+解决：
+# 1. 检查 FastAPI 是否运行
+netstat -ano | findstr :5000
+
+# 2. 如果没有，启动 FastAPI
+cd C:\Users\Administrator\Desktop\vocabulary\fastapi版本
+python main.py
+
+
+===============================================
+          快速命令速查表
+===============================================
+
+操作                  命令
+-----------------------------------------------
+启动                  start nginx
+停止                  nginx -s stop
+重启                  nginx -s reload
+测试配置              nginx -t
+查看进程              tasklist /fi "imagename eq nginx.exe"
+强制结束              taskkill /f /im nginx.exe
+查看访问日志          打开 logs\access.log
+查看错误日志          打开 logs\error.log
+
+
+===============================================
+            配置模板
+===============================================
+
+基础端口转发
+-----------------------------------------------
+server {
+    listen 80;
+    location / {
+        proxy_pass http://127.0.0.1:5000;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    }
+}
+
+
+多端口转发
+-----------------------------------------------
+# 80端口 → 转发到5000（主站）
+server {
+    listen 80;
+    location / {
+        proxy_pass http://127.0.0.1:5000;
+    }
+}
+
+# 8080端口 → 转发到3000（API）
+server {
+    listen 8080;
+    location / {
+        proxy_pass http://127.0.0.1:3000;
+    }
+}
+
+
+根据路径转发
+-----------------------------------------------
+server {
+    listen 80;
+    
+    # /api → 转发到5000
+    location /api {
+        proxy_pass http://127.0.0.1:5000;
+    }
+    
+    # /admin → 转发到3000
+    location /admin {
+        proxy_pass http://127.0.0.1:3000;
+    }
+}
+
+
+===============================================
+         完整工作流程
+===============================================
+
+初次部署
+-----------------------------------------------
+# 1. 解压 Nginx 到桌面
+# 2. 修改配置文件
+notepad C:\Users\Administrator\Desktop\nginx-1.28.0\conf\nginx.conf
+
+# 3. 测试配置
+cd C:\Users\Administrator\Desktop\nginx-1.28.0
+nginx -t
+
+# 4. 启动 Nginx
+start nginx
+
+# 5. 启动 FastAPI
+cd C:\Users\Administrator\Desktop\vocabulary\fastapi版本
+python main.py
+
+# 6. 浏览器访问
+http://localhost
+
+
+修改配置
+-----------------------------------------------
+# 1. 编辑配置
+notepad C:\Users\Administrator\Desktop\nginx-1.28.0\conf\nginx.conf
+
+# 2. 测试
+cd C:\Users\Administrator\Desktop\nginx-1.28.0
+nginx -t
+
+# 3. 重启
+nginx -s reload
+
+
+遇到问题
+-----------------------------------------------
+# 1. 查看错误日志
+notepad C:\Users\Administrator\Desktop\nginx-1.28.0\logs\error.log
+
+# 2. 重启 Nginx
+taskkill /f /im nginx.exe
+cd C:\Users\Administrator\Desktop\nginx-1.28.0
+start nginx
+
+# 3. 检查 FastAPI
+cd C:\Users\Administrator\Desktop\vocabulary\fastapi版本
+python main.py
+
+
+===============================================
+最后更新：2025-10-03
+===============================================
+
